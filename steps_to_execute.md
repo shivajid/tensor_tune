@@ -2,16 +2,31 @@
 
 This document provides the commands to execute the steps outlined in the `README.md` for PEFT tuning with JAX.
 
-## 1. Create a TPUVM
+## 1. Create a TPUv6e-8 VM
 
-This step is specific to your cloud provider. For Google Cloud, you would use a command similar to this:
+This step is specific to your cloud provider. For Google Cloud, you would use the following commands.
 
+First, set up your project configuration:
 ```bash
-# This is an example command and may need to be adjusted for your project and zone.
+# Set your project ID
+gcloud config set project your-project-id
+
+# Set your compute zone
+gcloud config set compute/zone us-central2-b
+```
+
+Next, create the TPUv6e-8 VM.
+```bash
+# This command creates a TPU VM. Adjust the name and zone as needed.
 gcloud compute tpus tpu-vm create your-tpu-name \
     --zone=us-central2-b \
-    --accelerator-type=v4-8 \
+    --accelerator-type=v6e-8 \
     --version=tpu-vm-base
+```
+
+After the TPU VM is created, connect to it using SSH:
+```bash
+gcloud compute tpus tpu-vm ssh your-tpu-name
 ```
 
 ## 2. Create a Python Virtual Environment

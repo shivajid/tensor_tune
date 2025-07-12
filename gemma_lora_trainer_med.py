@@ -42,9 +42,9 @@ NUM_EPOCHS = 3
 print(f"MESH {MESH}")
 
 # Checkpoint saving
-INTERMEDIATE_CKPT_DIR = "/home/shivajid/intermediate_ckpt/"
-CKPT_DIR = "/home/shivajid/ckpts/"
-PROFILING_DIR = "/home/shivajid/profiling/"
+INTERMEDIATE_CKPT_DIR = "/home/shivajid/workshop/tensor_tune/intermediate_ckpt_med/"
+CKPT_DIR = "/home/shivajid/workshop/tensor_tune/ckpts_med/"
+PROFILING_DIR = "/home/shivajid/workshop/tensor_tune/profiling_med/"
 
 
 #Kaggle login
@@ -184,7 +184,7 @@ def gen_model_input_fn(x: peft_trainer.TrainingInput):
 
 #Training with full weights
 logging_option = metrics_logger.MetricsLoggerOptions(
-    log_dir="/tmp/tensorboard/peft", flush_every_n_steps=20
+    log_dir="/home/shivajid/workshop/tensor_tune/tensorboard_med", flush_every_n_steps=20
 )
 
 '''

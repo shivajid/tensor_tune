@@ -1,0 +1,10 @@
+flax
+jax[tpu]
+jax-numpy
+kagglehub
+optax
+orbax-checkpoint
+qwix
+tunix
+datasets
+sentencepiece

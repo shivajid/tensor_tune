@@ -16,7 +16,16 @@ gcloud compute tpus tpu-vm create your-tpu-name \
 
 ## 2. Create a Python Virtual Environment
 
-After connecting to your TPU VM, create a Python 3.11 virtual environment.
+After connecting to your TPU VM, you may need to install Python 3.11 if it is not available.
+
+*Note: The following commands are for Debian/Ubuntu-based systems. You may need to adapt them for your specific OS.*
+```bash
+# Update package list and install python 3.11
+sudo apt-get update
+sudo apt-get install -y python3.11 python3.11-venv
+```
+
+Once Python 3.11 is installed, create a Python 3.11 virtual environment.
 
 ```bash
 python3.11 -m venv .venv

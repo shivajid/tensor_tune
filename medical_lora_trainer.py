@@ -50,7 +50,7 @@ print(f"MESH {MESH}")
 
 # Checkpoint saving
 INTERMEDIATE_CKPT_DIR = "/home/shivajid/med_intermediate_ckpt/med/"
-CKPT_DIR = "/home/shivajid/ckpts/med/"
+CKPT_DIR = "/home/shivajid/ckpts/med/01/"
 PROFILING_DIR = "/home/shivajid/profiling/med"
 
 # Kaggle login
@@ -121,7 +121,7 @@ sampler = sampler_lib.Sampler(
 # Test medical questions before LoRA tuning
 print("\n=== Testing Base Model (Before LoRA Tuning) ===")
 medical_test_questions_before = [
-    "What are the symptoms of diabetes?",
+    "What are the symptoms of pnuemonia?",
     "How is hypertension diagnosed?",
     "What is the procedure for a colonoscopy?",
     "What are the side effects of aspirin?",
@@ -286,7 +286,7 @@ sampler_trained = sampler_lib.Sampler(
 # Test medical questions after training
 medical_test_questions_after = [
     # Medical diagnosis
-    "What are the symptoms of diabetes?",
+    "What are the symptoms of pnuemonia?",
     "How is hypertension diagnosed?",
     
     # Medical procedures

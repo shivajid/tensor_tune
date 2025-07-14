@@ -252,12 +252,16 @@ class _Tokenize(grain.MapTransform):
           element["answer"], add_eos=True
       )
     elif "instruction" in element.keys() and "response" in element.keys():  ## Instruction datasets
-      src_tokens = self._tokenizer.tokenize(
-          element["instruction"],
+      if "input" in element.keys() and element["input"]: # Ensure 'input' exists and is not empty
+        full_instruction = f"{element['instruction']}\n{element['input']}"
+      else:
+        full_instruction = element["instruction"]
+        src_tokens = self._tokenizer.tokenize(
+          full_instruction,
           prefix=self._input_template["prefix"],
           suffix=self._input_template["suffix"],
           add_eos=False,
-      )
+        )
       dst_tokens = self._tokenizer.tokenize(
           element["response"], add_eos=True
       )

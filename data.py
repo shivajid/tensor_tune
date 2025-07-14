@@ -132,9 +132,14 @@ def create_datasets(
     )
   # Medical Datasets
   elif dataset_name == "medalpaca/medical_meadow_medqa":  # Medical instruction dataset
-    train_ds, eval_ds = datasets.load_dataset(
-        dataset_name, split=("train", "validation")
+    train_ds = datasets.load_dataset(
+        dataset_name, split=("train")
     )
+    split_dataset = train_ds.train_test_split(test_size=0.2, seed=42)
+    train_ds = split_dataset['train']
+    eval_ds = split_dataset['test']
+
+    #eval_ds = None
   elif dataset_name == "microsoft/DialoGPT-medium":  # Medical dialogue (can be adapted)
     train_ds, eval_ds = datasets.load_dataset(
         dataset_name, split=("train", "validation")
@@ -159,7 +164,8 @@ def create_datasets(
     raise ValueError(f"Unsupported dataset: {dataset_name}")
 
   input_template = INPUT_TEMPLATE_IT if instruct_tuned else INPUT_TEMPLATE
-
+  eval_loader = None
+  
   train_loader = _build_data_loader(
       data_source=train_ds,
       batch_size=global_batch_size,
@@ -168,7 +174,8 @@ def create_datasets(
       tokenizer=tokenizer,
       input_template=input_template,
   )
-  eval_loader = _build_data_loader(
+  if eval_ds is not None:
+   eval_loader = _build_data_loader(
       data_source=eval_ds,
       batch_size=global_batch_size,
       num_epochs=1,

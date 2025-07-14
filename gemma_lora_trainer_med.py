@@ -164,7 +164,7 @@ lora_gemma = get_lora_model(gemma, mesh=mesh)
 #Load Datasets for SFT Training
 train_ds, validation_ds = data_lib.create_datasets(
     dataset_name='pubmed_qa',
-    dataset_config_name='pqa_labeled',
+    #dataset_config_name='pqa_labeled',
     global_batch_size=BATCH_SIZE,
     max_target_length=256,
     num_train_epochs=NUM_EPOCHS,

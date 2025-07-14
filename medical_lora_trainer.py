@@ -23,6 +23,7 @@ from tunix.models.gemma import gemma as gemma_lib
 from tunix.models.gemma import params as params_lib
 from tunix.sft import metrics_logger
 from tunix.sft import peft_trainer
+from tunix.sft import profiler
 import os
 
 os.environ["JAX_TRACEBACK_FILTERING"] = "off"
@@ -173,7 +174,7 @@ def gen_model_input_fn(x: peft_trainer.TrainingInput):
 
 # Example 1: Medical Instruction Dataset (MedAlpaca)
 print("\n=== Training on MedAlpaca Medical Instruction Dataset ===")
-train_ds_medalpaca, validation_ds_medalpaca = data_lib.create_datasets(
+train_ds_medalpaca, validation_ds_medalpaca  = data_lib.create_datasets(
     dataset_name='medalpaca/medical_meadow_medqa',
     global_batch_size=BATCH_SIZE,
     max_target_length=256,
@@ -184,14 +185,17 @@ train_ds_medalpaca, validation_ds_medalpaca = data_lib.create_datasets(
 
 # Training configuration for MedAlpaca
 logging_option_medalpaca = metrics_logger.MetricsLoggerOptions(
-    log_dir="/tmp/tensorboard/peft_medalpaca", flush_every_n_steps=20
+    log_dir="/tmp/tensorboard/peft_medalpaca", flush_every_n_steps=50
 )
+profiler_option_medalpaca = profiler.ProfilerOptions(log_dir=PROFILING_DIR, skip_first_n_steps=2, profiler_steps=25) 
+
 
 training_config_medalpaca = peft_trainer.TrainingConfig(
     eval_every_n_steps=EVAL_EVERY_N_STEPS,
     max_steps=MAX_STEPS,
     checkpoint_root_directory=CKPT_DIR,
     metrics_logging_options=logging_option_medalpaca,
+    profiler_options=profiler_option_medalpaca,
 )
 
 lora_trainer_medalpaca = peft_trainer.PeftTrainer(
@@ -199,10 +203,10 @@ lora_trainer_medalpaca = peft_trainer.PeftTrainer(
 ).with_gen_model_input_fn(gen_model_input_fn)
 
 # Train on MedAlpaca
-with jax.profiler.trace(os.path.join(PROFILING_DIR, "peft_medalpaca")):
-    with mesh:
-        lora_trainer_medalpaca.train(train_ds_medalpaca, validation_ds_medalpaca)
-
+#with jax.profiler.trace(os.path.join(PROFILING_DIR, "peft_medalpaca")):
+with mesh:
+    lora_trainer_medalpaca.train(train_ds_medalpaca, validation_ds_medalpaca)
+'''
 # Example 2: Medical Question-Answering Dataset (PubMed QA)
 print("\n=== Training on PubMed QA Dataset ===")
 train_ds_pubmed, validation_ds_pubmed = data_lib.create_datasets(
@@ -264,7 +268,7 @@ lora_trainer_medmcqa = peft_trainer.PeftTrainer(
 with jax.profiler.trace(os.path.join(PROFILING_DIR, "peft_medmcqa")):
     with mesh:
         lora_trainer_medmcqa.train(train_ds_medmcqa, validation_ds_medmcqa)
-
+'''
 # Test the trained medical model
 print("\n=== Testing the Trained Medical Model (After LoRA Tuning) ===")
 

@@ -48,9 +48,9 @@ NUM_EPOCHS = 3
 print(f"MESH {MESH}")
 
 # Checkpoint saving
-INTERMEDIATE_CKPT_DIR = "/home/shivajid/intermediate_ckpt/"
-CKPT_DIR = "/home/shivajid/ckpts/"
-PROFILING_DIR = "/home/shivajid/profiling/"
+INTERMEDIATE_CKPT_DIR = "/home/shivajid/med_intermediate_ckpt/med/"
+CKPT_DIR = "/home/shivajid/ckpts/med/"
+PROFILING_DIR = "/home/shivajid/profiling/med"
 
 # Kaggle login
 if "KAGGLE_USERNAME" not in os.environ or "KAGGLE_KEY" not in os.environ:
@@ -174,7 +174,7 @@ def gen_model_input_fn(x: peft_trainer.TrainingInput):
 # Example 1: Medical Instruction Dataset (MedAlpaca)
 print("\n=== Training on MedAlpaca Medical Instruction Dataset ===")
 train_ds_medalpaca, validation_ds_medalpaca = data_lib.create_datasets(
-    dataset_name='medalpaca/medical_meadow',
+    dataset_name='medalpaca/medical_meadow_medqa',
     global_batch_size=BATCH_SIZE,
     max_target_length=256,
     num_train_epochs=NUM_EPOCHS,

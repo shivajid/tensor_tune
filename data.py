@@ -131,7 +131,7 @@ def create_datasets(
         dataset_name, split=("train", "validation")
     )
   # Medical Datasets
-  elif dataset_name == "medalpaca/medical_meadow":  # Medical instruction dataset
+  elif dataset_name == "medalpaca/medical_meadow_medqa":  # Medical instruction dataset
     train_ds, eval_ds = datasets.load_dataset(
         dataset_name, split=("train", "validation")
     )

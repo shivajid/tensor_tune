@@ -134,7 +134,7 @@ for input_string, out_string in zip(input_batch, out_data.text):
 
 
 
-## Apply qLora
+## Apply Lora
 
 def get_lora_model(base_model, mesh):
   lora_provider = lora.LoraProvider(
@@ -168,6 +168,19 @@ train_ds, validation_ds = data_lib.create_datasets(
     # Note that this requires upgrading the 'datasets' package and restarting
     # the Colab runtime.
     # dataset_name='Helsinki-NLP/opus-100',
+    
+    # Alternative translation datasets:
+    # dataset_name='Helsinki-NLP/opus-100',  # with data_dir="de-en" for German-English
+    # dataset_name='Helsinki-NLP/opus-100',  # with data_dir="es-en" for Spanish-English
+    
+    # Non-translation datasets (requires code modifications):
+    # dataset_name='squad',  # Question-Answering
+    # dataset_name='hotpot_qa',  # Multi-hop QA
+    # dataset_name='cnn_dailymail',  # Text Summarization
+    # dataset_name='xsum',  # Extreme Summarization
+    # dataset_name='tatsu-lab/alpaca',  # Instruction Following
+    # dataset_name='databricks/databricks-dolly-15k',  # Instruction Following
+    
     global_batch_size=BATCH_SIZE,
     max_target_length=256,
     num_train_epochs=NUM_EPOCHS,

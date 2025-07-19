@@ -328,51 +328,10 @@ print("\nConverting and saving the fine-tuned model to .safetensors format...")
 
 # --- 1. Define the output directory ---
 # This is where your final .safetensors file will be saved.
-SERVABLE_CKPT_DIR = "/home/shivajid/safetensors_ckpt/v2/"
+SERVABLE_CKPT_DIR = "/home/shivajid/safetensors_ckpt/v3/"
 if os.path.exists(SERVABLE_CKPT_DIR):
     shutil.rmtree(SERVABLE_CKPT_DIR)
 os.makedirs(SERVABLE_CKPT_DIR, exist_ok=True)
-
-'''
-# --- 2. Define the conversion function ---
-def model_state_to_hf_weights(state: nnx.State) -> dict:
-    weights_dict = {}
-
-    # It's safer to move large tensors to the CPU to avoid Out Of Memory errors
-    cpu = jax.devices("cpu")[0]
-
-    # Handle the vocabulary size, slicing to match the base Gemma model (256k)
-    vocab_size = 256000
-    weights_dict['model.embed_tokens.weight'] = jax.device_put(
-        state.embedder.input_embedding.value, cpu
-    )[:vocab_size, :]
-
-    weights_dict['model.norm.weight'] = state.final_norm.scale.value
-
-    for idx, layer in enumerate(state.layers):
-        print(f"Layers: {layer}")
-        print(f"idx: {idx}")
-    
-    print(f"State: {state}")
-    
-    for idx, layer in state.layers.items():
-        # Map layer normalization weights
-        weights_dict[f'model.layers.{idx}.input_layernorm.weight'] = layer.pre_attention_norm.scale.value
-        weights_dict[f'model.layers.{idx}.post_attention_layernorm.weight'] = layer.pre_ffw_norm.scale.value
-
-        # Reshape and transpose attention weights to match the Hugging Face format
-        weights_dict[f'model.layers.{idx}.self_attn.q_proj.weight'] = layer.attn.q_einsum.w.value.transpose([0, 2, 1]).reshape((2048, 2048))
-        weights_dict[f'model.layers.{idx}.self_attn.k_proj.weight'] = jnp.squeeze(layer.attn.kv_einsum.w.value[0].T, -1)
-        weights_dict[f'model.layers.{idx}.self_attn.v_proj.weight'] = jnp.squeeze(layer.attn.kv_einsum.w.value[1].T, -1)
-        weights_dict[f'model.layers.{idx}.self_attn.o_proj.weight'] = layer.attn.attn_vec_einsum.w.value.T.transpose([0, 2, 1]).reshape((2048, 2048))
-
-        # Transpose MLP (feed-forward network) weights
-        weights_dict[f'model.layers.{idx}.mlp.down_proj.weight'] = layer.mlp.down_proj.kernel.value.T
-        weights_dict[f'model.layers.{idx}.mlp.gate_proj.weight'] = layer.mlp.gate_proj.kernel.value.T
-        weights_dict[f'model.layers.{idx}.mlp.up_proj.weight'] = layer.mlp.up_proj.kernel.value.T
-
-    return weights_dict
-'''
 
 
 # --- 2. Define the corrected conversion function with updated LoRA weight names ---
@@ -400,62 +359,6 @@ def model_state_to_hf_weights(state: nnx.State, rank: int, alpha: float) -> dict
     num_heads = 8
     num_kv_heads = 1
     head_dim = 256
-    '''
-    # Iterate through each layer to merge weights
-    for idx, layer in state.layers.items():
-        # Layer normalizations (no LoRA here)
-        weights_dict[f'model.layers.{idx}.input_layernorm.weight'] = jax.device_put(layer.pre_attention_norm.scale.value, cpu)
-        weights_dict[f'model.layers.{idx}.post_attention_layernorm.weight'] = jax.device_put(layer.pre_ffw_norm.scale.value, cpu)
-
-        # Helper function to merge a single LoRA-adapted weight
-        def merge_and_format(layer_key, base_weight, hf_shape, lora_A, lora_B, transpose_base=False):
-            base_weight_cpu = jax.device_put(base_weight, cpu)
-            lora_A_cpu = jax.device_put(lora_A, cpu)
-            lora_B_cpu = jax.device_put(lora_B, cpu)
-
-            if transpose_base:
-                merged_weight = base_weight_cpu.T
-            else:
-                merged_weight = base_weight_cpu
-
-            print(f"Shape of lora_A: {lora_A_cpu.shape}")
-            print(f"Shape of lora_B: {lora_B_cpu.shape}")
-            lora_B_shaped = lora_B_cpu.reshape(lora_B_cpu.shape[0], -1)
-
-            print(f"Shape of lora_B_shaped: {lora_B_shaped.shape}")
-            delta_w = (lora_B_shaped.T @ lora_A_cpu.T) * scaling_factor
-            merged_weight += delta_w
-
-            weights_dict[f'model.layers.{idx}.{layer_key}'] = merged_weight.reshape(hf_shape)
-
-        # --- Attention Block (Q, K, V, O projections) ---
-        attn = layer.attn
-        # Q-Projection
-        base_w_q = attn.q_einsum.w.value.transpose([2, 0, 1]).reshape(embed_dim, embed_dim)
-        # CHANGED: Using 'w_lora_a' and 'w_lora_b'
-        merge_and_format('self_attn.q_proj.weight', base_w_q, (embed_dim, embed_dim), attn.q_einsum.w_lora_a.value, attn.q_einsum.w_lora_b.value)
-
-        # K-Projection
-        base_w_k = attn.kv_einsum.w.value[0].reshape(embed_dim, num_kv_heads * head_dim)
-        # CHANGED: Using 'w_lora_a' and 'w_lora_b'
-        merge_and_format('self_attn.k_proj.weight', base_w_k, (num_kv_heads * head_dim, embed_dim), attn.kv_einsum.w_lora_a.value[0], attn.kv_einsum.w_lora_b.value[0], transpose_base=True)
-
-        # V-Projection
-        base_w_v = attn.kv_einsum.w.value[1].reshape(embed_dim, num_kv_heads * head_dim)
-        # CHANGED: Using 'w_lora_a' and 'w_lora_b'
-        merge_and_format('self_attn.v_proj.weight', base_w_v, (num_kv_heads * head_dim, embed_dim), attn.kv_einsum.w_lora_a.value[1], attn.kv_einsum.w_lora_b.value[1], transpose_base=True)
-
-        # O-Projection (No LoRA applied in your config, just format base weight)
-        base_w_o = attn.attn_vec_einsum.w.value.reshape(embed_dim, embed_dim)
-        weights_dict[f'model.layers.{idx}.self_attn.o_proj.weight'] = jax.device_put(base_w_o.T, cpu)
-
-        # --- MLP Block (gate, up, down projections) ---
-        mlp = layer.mlp
-        # CHANGED: Using 'kernel_lora_a' and 'kernel_lora_b' for all MLP layers
-        merge_and_format('mlp.gate_proj.weight', mlp.gate_proj.kernel.value, (hidden_dim, embed_dim), mlp.gate_proj.kernel_lora_a.value, mlp.gate_proj.kernel_lora_b.value, transpose_base=True)
-        merge_and_format('mlp.up_proj.weight', mlp.up_proj.kernel.value, (hidden_dim, embed_dim), mlp.up_proj.kernel_lora_a.value, mlp.up_proj.kernel_lora_b.value, transpose_base=True)
-        merge_and_format('mlp.down_proj.weight', mlp.down_proj.kernel.value, (embed_dim, hidden_dim), mlp.down_proj.kernel_lora_a.value, mlp.down_proj.kernel_lora_b.value, transpose_base=True)
-    '''
 
     # Iterate through each layer to merge weights
     for idx, layer in state.layers.items():
@@ -570,9 +473,6 @@ def model_state_to_hf_weights(state: nnx.State, rank: int, alpha: float) -> dict
 # Extract the state (the weights) from the trained LoRA model object
 _, lora_state = nnx.split(lora_gemma)
 
-print ("updating state")
-#intermediat_overwrite
-#lora_state = state
 
 # Perform the conversion on the CPU to be memory-safe
 with jax.default_device(jax.devices("cpu")[0]):

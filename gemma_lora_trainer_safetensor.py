@@ -328,7 +328,7 @@ print("\nConverting and saving the fine-tuned model to .safetensors format...")
 
 # --- 1. Define the output directory ---
 # This is where your final .safetensors file will be saved.
-SERVABLE_CKPT_DIR = "/home/shivajid/safetensors_ckpt/"
+SERVABLE_CKPT_DIR = "/home/shivajid/safetensors_ckpt/v2/"
 if os.path.exists(SERVABLE_CKPT_DIR):
     shutil.rmtree(SERVABLE_CKPT_DIR)
 os.makedirs(SERVABLE_CKPT_DIR, exist_ok=True)
@@ -412,5 +412,8 @@ from safetensors.flax import save_file
 save_file(servable_weights, os.path.join(SERVABLE_CKPT_DIR, 'model.safetensors'))
 
 print(f" Model successfully saved to {os.path.join(SERVABLE_CKPT_DIR, 'model.safetensors')}")
+
+#from huggingface_hub import snapshot_download
+#snapshot_download(repo_id="google/gemma-2b", allow_patterns="*.json", local_dir=SERVABLE_CKPT_DIR)
 
 

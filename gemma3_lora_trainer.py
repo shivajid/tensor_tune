@@ -28,7 +28,7 @@ print("Let's have some fun with Gemma3!")
 BATCH_SIZE = 16
 
 # Model
-MESH = [(1, 8), ("fsdp", "tp")]
+MESH = [(2, 4), ("fsdp", "tp")]
 # LoRA
 RANK = 16
 ALPHA = 2.0
@@ -142,9 +142,16 @@ def get_lora_model(base_model, mesh):
         # tile_size=256,
     )
 
-    model_input = base_model.get_model_input()
+    # Create dummy model input for Gemma3 (similar to test_common.py)
+    dummy_model_input = {
+        'last_tokens': jnp.ones((2, 1), dtype=jnp.int32),
+        'positions': jnp.ones((2, 1), dtype=jnp.int32),
+        'cache': None,
+        'attention_mask': jnp.ones((2, 1, 1), dtype=jnp.bool_),
+    }
+    
     lora_model = lora.apply_lora_to_model(
-        base_model, lora_provider, **model_input
+        base_model, lora_provider, **dummy_model_input
     )
 
     with mesh:

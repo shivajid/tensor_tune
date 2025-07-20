@@ -11,9 +11,9 @@ from orbax import checkpoint as ocp
 from qwix import lora
 from tunix.generate import sampler as sampler_lib
 from tunix.models.gemma import data as data_lib
+from tunix.models.gemma import gemma as gemma_lib
 from tunix.models.gemma3 import model as gemma3_lib
 from tunix.models.gemma3 import params as params_lib
-from tunix.rl import common as common_lib
 from tunix.sft import metrics_logger
 from tunix.sft import peft_trainer
 import os
@@ -193,8 +193,8 @@ train_ds, validation_ds = data_lib.create_datasets(
 def gen_model_input_fn(x: peft_trainer.TrainingInput):
     """Generate model inputs from training data."""
     pad_mask = x.input_tokens != gemma3_tokenizer.pad_id()
-    positions = common_lib.build_positions_from_mask(pad_mask)
-    attention_mask = common_lib.make_causal_attn_mask(pad_mask)
+    positions = gemma_lib.build_positions_from_mask(pad_mask)
+    attention_mask = gemma_lib.make_causal_attn_mask(pad_mask)
     return {
         'input_tokens': x.input_tokens,
         'input_mask': x.input_mask,
